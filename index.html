@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guns.lol - Image Upload</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login">
+        <h1>Login</h1>
+        <p>Default password: password</p>
+        <p><a href="https://gundotlolimages.w3spaces.com/disclosure.html">This site is not owned or managed by guns.lol</a></p>
+        <input type="password" id="passwordInput" placeholder="Enter password">
+        <button onclick="checkPassword()">Login</button>
+        <div id="popup" style="display: none;">
+            <p id="popupMessage"></p>
+            <button onclick="closePopup()">Close</button>
+        </div>
+    </div>
+
+    <div id="uploadScreen" style="display: none;">
+        <h1>Upload to Guns.lol</h1>
+        <p><i>This site is not able to recieve URL(s) due to CORS restrictions</i></p>
+        <button onclick="openPasswordChangePopup()">Change Password</button>
+        <form action="https://guns.lol/api/upload" method="POST" enctype="multipart/form-data" onsubmit="return handleUpload(event)">
+            <div>
+                <label for="key">API Key:</label>
+                <div id="apiKeyContainer">
+                    <input type="text" id="key" name="key" placeholder="Enter your API key" required>
+                    <button type="button" onclick="saveApiKey()">Save API Key</button>
+                </div>
+                <div id="savedKey" style="display: none;">
+                    <span id="blurredKey" class="blurred"></span>
+                    <button type="button" onclick="editApiKey()">Edit</button>
+                </div>
+            </div>
+            <div>
+                <label for="file">File:</label>
+                <input type="file" id="file" name="file" required>
+            </div>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="status">Status: Waiting for upload...</div>
+        <div id="passwordChangePopup" style="display: none;">
+            <h2>Change Password</h2>
+            <input type="password" id="newPasswordInput" placeholder="Enter new password">
+            <button onclick="changePassword()">Change</button>
+            <button onclick="closePasswordChangePopup()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let savedPassword = localStorage.getItem('password') || 'password';
+        let savedApiKey = localStorage.getItem('apiKey') || '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedKeyElement = document.getElementById('savedKey');
+            const apiKeyContainer = document.getElementById('apiKeyContainer');
+            const blurredKeyElement = document.getElementById('blurredKey');
+
+            if (savedApiKey) {
+                blurredKeyElement.textContent = savedApiKey.replace(/./g, '•');
+                apiKeyContainer.style.display = 'none';
+                savedKeyElement.style.display = 'block';
+            }
+        });
+
+        function saveApiKey() {
+            const apiKeyInput = document.getElementById('key').value;
+            if (apiKeyInput) {
+                localStorage.setItem('apiKey', apiKeyInput);
+                document.getElementById('blurredKey').textContent = apiKeyInput.replace(/./g, '•');
+                document.getElementById('apiKeyContainer').style.display = 'none';
+                document.getElementById('savedKey').style.display = 'block';
+            }
+        }
+
+        function editApiKey() {
+            document.getElementById('key').value = savedApiKey;
+            document.getElementById('apiKeyContainer').style.display = 'block';
+            document.getElementById('savedKey').style.display = 'none';
+        }
+
+        function checkPassword() {
+            const passwordInput = document.getElementById('passwordInput').value;
+            if (passwordInput === savedPassword) {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('uploadScreen').style.display = 'block';
+            } else {
+                showPopup('Incorrect password');
+            }
+        }
+
+        function handleUpload(event) {
+            event.preventDefault();
+            const status = document.getElementById('status');
+            status.textContent = 'Status: Uploading...';
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: form.method,
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    status.textContent = 'Status: Uploaded';
+                })
+                .catch(() => {
+                    status.textContent = 'Status: Upload failed';
+                });
+        }
+
+        function openPasswordChangePopup() {
+            document.getElementById('passwordChangePopup').style.display = 'block';
+        }
+
+        function changePassword() {
+            const newPassword = document.getElementById('newPasswordInput').value;
+            if (newPassword) {
+                savedPassword = newPassword;
+                localStorage.setItem('password', newPassword);
+                showPopup('Password changed successfully');
+                closePasswordChangePopup();
+            }
+        }
+
+        function closePasswordChangePopup() {
+            document.getElementById('passwordChangePopup').style.display = 'none';
+        }
+
+        function showPopup(message) {
+            const popup = document.getElementById('popup');
+            document.getElementById('popupMessage').textContent = message;
+            popup.style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
